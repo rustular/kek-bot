@@ -8,22 +8,8 @@ generator client {
     output   = "../src/prisma.rs"
 }
 
-model Kek {
-    id         Int        @id @default(autoincrement())
-    name       String
-    kek_usages KekUsage[]
-}
-
-model User {
-    id         Int        @id @default(autoincrement())
-    username   String
-    kek_usages KekUsage[]
-}
-
 model KekUsage {
     id     DateTime @id @default(now())
-    User   User?    @relation(fields: [userId], references: [id])
-    userId Int?
-    Kek    Kek?     @relation(fields: [kekId], references: [id])
-    kekId  Int?
+    kek String
+    user String
 }
