@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 dotenv = "0.15.0"
-serenity = {version = "0.11.6", features = ["framework","standard_framework"]}
+regex = "1.9.5"
+serenity = {version = "0.11.6", default-features = false, features = ["client", "gateway", "rustls_backend", "model"]}
 tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }

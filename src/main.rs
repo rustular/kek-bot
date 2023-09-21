@@ -1,60 +1,60 @@
-mod env;
-
 use serenity::async_trait;
-use serenity::framework::standard::macros::{command, group};
-use serenity::framework::standard::{CommandResult, StandardFramework};
 use serenity::model::channel::Message;
-
-use serenity::model::id::EmojiId;
-use serenity::model::misc::EmojiIdentifier;
-
+use serenity::model::gateway::Ready;
 use serenity::prelude::*;
-#[group]
-#[commands(ping, wrong_kek)]
-struct General;
+use regex::Regex;
+
+mod env;
 
 struct Handler;
 
 #[async_trait]
-impl EventHandler for Handler {}
+impl EventHandler for Handler {
+    async fn message(&self, ctx: Context, msg: Message) {
+        if msg.content == "!ping" {
+            if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
+                println!("Error sending message: {:?}", why);
+            }
+        }
+
+        kek_counter(&msg);
+
+
+    }
+
+    async fn ready(&self, _: Context, ready: Ready) {
+        println!("{} is connected!", ready.user.name);
+    }
+}
+
+fn kek_counter(msg:&Message){
+
+        let has_kek = msg.content.to_lowercase().contains("kek");
+        if has_kek {
+            let kek_regex = Regex::new(r"(?mU).*:(?P<kek>.*[kK][eE][kK].*):.*").unwrap(); 
+            let keks = kek_regex.captures_iter(&msg.content);
+            let user = msg.author.name.as_str();
+
+            for cap in keks {
+                let kek = cap.name("kek").unwrap().as_str();
+                println!("{}  {}", user,kek);
+            }
+        }
+
+}
+
 
 #[tokio::main]
 async fn main() {
-    let env = env::get_env().unwrap();
+    let token = env::get_env().unwrap().discord_token;
+    let intents = GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::DIRECT_MESSAGES
+        | GatewayIntents::MESSAGE_CONTENT;
 
-    let framework = StandardFramework::new()
-        .configure(|c| {
-            c.prefixes.push("".to_owned());
-            c
-        })
-        .group(&GENERAL_GROUP);
-
-    let token = env.discord_token;
-    let intents = GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT;
-    let mut client = Client::builder(token, intents)
-        .event_handler(Handler)
-        .framework(framework)
-        .await
-        .expect("Error creating client");
+    let mut client =
+        Client::builder(&token, intents).event_handler(Handler).await.expect("Err creating client");
 
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }
-}
-
-#[command]
-async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Pong!").await?;
-    Ok(())
-}
-
-#[command]
-#[aliases(":KEKWt:")]
-async fn wrong_kek(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply(
-        ctx,
-        "https://cdn.discordapp.com/emojis/1069468390231654561.webp?size=96&quality=lossless",
-    )
-    .await?;
-    Ok(())
 }
