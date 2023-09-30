@@ -12,9 +12,14 @@ shuttle-secrets = "0.27.0"
 tokio = "1.26.0"
 tracing = "0.1.37"
 regex = "1.9.5"
-prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.9" }
 serde = "1.0.183"
 shuttle-shared-db = "0.27.0"
+
+[dependencies.prisma-client-rust]
+git = "https://github.com/Brendonovich/prisma-client-rust"
+tag = "0.6.9"
+default-features = false
+features = ["postgresql"]
 
 [workspace]
 members = [".", "prisma-cli"]
