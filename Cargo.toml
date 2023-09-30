@@ -1,16 +1,17 @@
 [package]
-name = "kek-bot"
+name = "kek"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-anyhow = "1.0.75"
-dotenv = "0.15.0"
+anyhow = "1.0.66"
+shuttle-serenity = "0.27.0"
+shuttle-runtime = "0.27.0"
+serenity = { version = "0.11.5", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
+shuttle-secrets = "0.27.0"
+tokio = "1.26.0"
+tracing = "0.1.37"
 regex = "1.9.5"
-serenity = {version = "0.11.6", default-features = false, features = ["client", "gateway", "rustls_backend", "model"]}
-tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
 prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.9" }
 serde = "1.0.183"
 
