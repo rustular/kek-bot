@@ -1,13 +1,13 @@
-use std::sync::Arc;
-
+use anyhow::anyhow;
 use prisma::PrismaClient;
 use regex::Regex;
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
+use shuttle_secrets::SecretStore;
+use std::sync::Arc;
 
-mod env;
 #[allow(warnings, unused)]
 mod prisma;
 
@@ -40,9 +40,11 @@ impl EventHandler for Handler {
 async fn kek_counter(ctx: &Context, msg: &Message) {
     let db = {
         let data = ctx.data.read().await;
-        data.get::<DbConnection>().expect("Oops! Can't get db connection").clone()
+        data.get::<DbConnection>()
+            .expect("Oops! Can't get db connection")
+            .clone()
     };
-    
+
     let has_kek = msg.content.to_lowercase().contains("kek");
     if has_kek {
         let kek_regex = Regex::new(r"(?mU).*:(?P<kek>.*[kK][eE][kK].*):.*").unwrap();
@@ -52,7 +54,11 @@ async fn kek_counter(ctx: &Context, msg: &Message) {
         for cap in keks {
             let kek = cap.name("kek").unwrap().as_str();
             println!("{}  {}", user, kek);
-            db.kek_usage().create(kek.to_string(), user.to_string(),vec![]).exec().await;
+            let _ = db
+                .kek_usage()
+                .create(kek.to_string(), user.to_string(), vec![])
+                .exec()
+                .await;
         }
     }
 }
@@ -62,18 +68,25 @@ async fn kek_fixer(ctx: &Context, msg: &Message) {
     let kek_suffer =
         "https://cdn.discordapp.com/emojis/1069468390231654561.webp?size=96&quality=lossless";
     if has_cursed_kek {
-        msg.reply(ctx, kek_suffer).await;
+        let _ = msg.reply(ctx, kek_suffer).await;
     }
 }
 
-#[tokio::main]
-async fn main() {
-    let token = env::get_env().unwrap().discord_token;
-    let intents = GatewayIntents::GUILD_MESSAGES
-        | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT;
+#[shuttle_runtime::main]
+async fn serenity(
+    #[shuttle_secrets::Secrets] secret_store: SecretStore,
+) -> shuttle_serenity::ShuttleSerenity {
+    // Get the discord token set in `Secrets.toml`
+    let token = if let Some(token) = secret_store.get("DISCORD_TOKEN") {
+        token
+    } else {
+        return Err(anyhow!("'DISCORD_TOKEN' was not found").into());
+    };
 
-    let mut client = Client::builder(&token, intents)
+    // Set gateway intents, which decides what events the bot will be notified about
+    let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
+
+    let client = Client::builder(&token, intents)
         .event_handler(Handler)
         .await
         .expect("Err creating client");
@@ -85,7 +98,5 @@ async fn main() {
         data.insert::<DbConnection>(Arc::new(db_client));
     }
 
-    if let Err(why) = client.start().await {
-        println!("Client error: {:?}", why);
-    }
+    Ok(client.into())
 }
