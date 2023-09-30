@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use prisma::PrismaClient;
+use prisma::{new_client_with_url, PrismaClient};
 use regex::Regex;
 use serenity::async_trait;
 use serenity::model::channel::Message;
@@ -83,6 +83,16 @@ async fn serenity(
         return Err(anyhow!("'DISCORD_TOKEN' was not found").into());
     };
 
+    // let db_url = secret_store
+    //     .get("DATABASE_URL")
+    //     .expect("URL for database missing! (env variable `DATABASE_URL`)");
+
+    let db_url = if let Some(db_url) = secret_store.get("DATABASE_URL") {
+        db_url
+    } else {
+        return Err(anyhow!("'DATABASE_URL' was not found").into());
+    };
+
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
 
@@ -91,7 +101,9 @@ async fn serenity(
         .await
         .expect("Err creating client");
 
-    let db_client = PrismaClient::_builder().build().await.unwrap();
+    let db_client = new_client_with_url(&db_url)
+        .await
+        .expect("Database connection failed.");
 
     {
         let mut data = client.data.write().await;
