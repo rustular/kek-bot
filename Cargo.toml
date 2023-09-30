@@ -16,7 +16,6 @@ prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust
 serde = "1.0.183"
 
 [workspace]
-members = [
-    "prisma-cli"
-]
+members = [".", "prisma-cli"]
+exclude = ["dep-installer-hack"]
 resolver = "2"
