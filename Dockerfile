@@ -11,7 +11,7 @@ COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --workspace --recipe-path recipe.json
 COPY . .
 RUN cargo prisma 
-RUN cargo prisma generate && cargo prisma db push
+RUN cargo prisma generate 
 RUN cargo build --release --bin kek-bot
 
 FROM ubuntu:latest AS runtime
