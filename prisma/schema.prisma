@@ -1,5 +1,5 @@
 datasource db {
-    provider = "sqlite"
+    provider = "cockroachdb"
     url      = env("DATABASE_URL")
 }
 
@@ -9,7 +9,7 @@ generator client {
 }
 
 model KekUsage {
-    id     DateTime @id @default(now())
-    kek String
+    id   DateTime @id @default(now())
+    kek  String
     user String
 }
