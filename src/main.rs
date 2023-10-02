@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use prisma::PrismaClient;
+use prisma::{PrismaClient, new_client_with_url};
 use regex::Regex;
 use serenity::async_trait;
 use serenity::model::channel::Message;
@@ -69,6 +69,7 @@ async fn kek_fixer(ctx: &Context, msg: &Message) {
 #[tokio::main]
 async fn main() {
     let token = env::get_env().unwrap().discord_token;
+    let db_url = env::get_env().unwrap().database_url;
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::MESSAGE_CONTENT;
@@ -78,7 +79,7 @@ async fn main() {
         .await
         .expect("Err creating client");
 
-    let db_client = PrismaClient::_builder().build().await.unwrap();
+    let db_client = new_client_with_url(&db_url).await.unwrap();
 
     {
         let mut data = client.data.write().await;
